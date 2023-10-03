@@ -12,7 +12,17 @@ const config: Phaser.Types.Core.GameConfig = {
 		// arcade: {
 		// 	gravity: { y: 100 },
 		// },
-		default: 'matter'
+		default: 'matter',
+		matter: {
+			// enableSleeping: true,
+			// gravity: {
+			// 	y: 0
+			// },
+			debug: {
+				showBody: true,
+				showStaticBody: true
+			}
+		}
 	},
 	scene: [HelloWorldScene],
 }
