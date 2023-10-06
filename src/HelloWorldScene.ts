@@ -1,7 +1,4 @@
-import { IEventCollision } from 'matter'
 import Phaser from 'phaser'
-
-
 
 export default class HelloWorldScene extends Phaser.Scene {
 	active: any = null;
@@ -29,9 +26,6 @@ export default class HelloWorldScene extends Phaser.Scene {
 		this.load.image('red', 'assets/particles/red.png')
 		
 	}
-	//1. change sprite to ball
-	//2. group per type
-	//3. ball overlap with all group
 
 	getBall(x: number, y: number) {
 		// const particles = this.add.particles('red')
@@ -57,13 +51,9 @@ export default class HelloWorldScene extends Phaser.Scene {
 						if(Math.abs(bodyA.position.x - bodyB.position.x) > 80 || Math.abs(bodyA.position.y - bodyB.position.y) > 80) {
 							return null;
 						}
-						// var fort={
-                        // 	x: (bodyA.position.x - bodyB.position.x) * 0.000001,
-                        // 	y: (bodyA.position.y - bodyB.position.y) * 0.000001
-                    	// }	
 						return {
-							x: (bodyA.position.x - bodyB.position.x) * 0.00005,
-							y: (bodyA.position.y - bodyB.position.y) * 0.00005,
+							x: (bodyA.position.x - bodyB.position.x) * 0.0001,
+							y: (bodyA.position.y - bodyB.position.y) * 0.0001,
 					  	};
 			  
 					  	// apply force to both bodies
@@ -74,34 +64,15 @@ export default class HelloWorldScene extends Phaser.Scene {
                 ]
             }
         }).setName('active')
-		// logo1.setDamping(true).setDrag(1, 1).setFriction(2, 2)
-        // loog.setDrag(0.975).setDamping(true).setBounce(1).setCollideWorldBounds(true).setCircle(200).setScale(.2).setInteractive();
-	
-		// logo1.setCollideWorldBounds(true)
-
-		// emitter1.startFollow(logo1)
 		this.active = logo1
 
 		return logo1;
 	}
 
 	getBall2(x: number, y: number) {
-		// const particles = this.add.particles('red')
-		// const emitter1 = particles.createEmitter({
-		// 	speed: 100,
-		// 	scale: { start: 1, end: 0 },
-		// 	blendMode: 'ADD',
-		// })
-
 		const logo1 = this.matter.add.image(x, y, 'ball2').setScale(2)
-		// logo1.setDamping(true).setDrag(1, 1).setFriction(2, 2)
 		logo1.setCircle(50)
-		
-        // loog.setDrag(0.975).setDamping(true).setBounce(1).setCollideWorldBounds(true).setCircle(200).setScale(.2).setInteractive();
 		logo1.setBounce(0.5)
-				// logo1.setCollideWorldBounds(true)
-
-		// emitter1.startFollow(logo1)
 		
 		return logo1;
 	}
@@ -109,18 +80,8 @@ export default class HelloWorldScene extends Phaser.Scene {
 	create() {
 		this.matter.enableAttractorPlugin();
 		
-		// this.log('start')
 		this.matter.world.setBounds(0, 0, 800, 600, 32, true, true, false, true);
 		this.add.image(400, 300, 'sky')
-
-		
-		
-		// this.getBall(100, 100).setCollisionGroup(this.balls)
-		// this.getBall(105, 105).setCollisionGroup(this.balls)
-
-		
-		// const particles = this.add.particles('red')
-
 
 		this.input.on('pointerdown', function (pointer)
         {
@@ -128,16 +89,18 @@ export default class HelloWorldScene extends Phaser.Scene {
 				return;
 			}
 			const ball = this.getBall(pointer.x, pointer.y).setCollisionGroup(this.balls)
-			ball.setOnCollide((collisionData) => {
+			ball.setOnCollide((collisionData) => {//TODO boba bounces away too much, check proximity in update() 
 				if (collisionData.bodyA.gameObject instanceof Phaser.GameObjects.Image &&
 					this.ballsList.includes(collisionData.bodyA.gameObject)) {
+					collisionData.bodyB.gameObject.setBounce(0)	
+					collisionData.bodyA.gameObject.setBounce(0)	
 					collisionData.bodyB.gameObject.setCollisionGroup(this.ballsTouch)
 					collisionData.bodyA.gameObject.setCollisionGroup(this.ballsTouch)
 				}
 			  });
 			
 			var timer = this.time.addEvent({
-				delay: 2000,                // ms
+				delay: 2000,               
 				callback: ()=>{
 					this.ballsList.push(this.active);
 					this.activeTimer = null;
@@ -153,42 +116,10 @@ export default class HelloWorldScene extends Phaser.Scene {
 				paused: false
 			});
 			this.activeTimer = timer
-			
-			// for(var b of balls) {
-			// 	this.matter.add.collider(b, ball);
-			// }
-
-			
-		
-			// this.matter.add.overlap(logo, logo1, () => {
-			// 	const newX = (logo.x + logo1.x)/2
-			// 	const newY = (logo.y + logo1.y)/2
-			// 	logo.destroy()
-			// 	logo1.destroy()
-			// 	const logo2 = this.matter.add.image(newX, newY, 'ball')
-			// 	logo2.setScale(1.5,1.5)
-			// 	logo2.setVelocity(100, 200)
-			// 	logo2.setBounce(1, 1)
-			// 	logo2.setCollideWorldBounds(true)
-			// 	emitter1.startFollow(logo2)
-			// 	emitter.startFollow(logo2)
-            // }, null, this);
-
         }, this);
-
-		// this.matter.add.collider(balls);
-
-        // O
-		
 	}
 
 	update() {
-		// if (this.active != null && this.active.body != null) {
-		// 	if(this.active.body.velocity.x <0.1 && this.active.body.velocity.y <0.1) {
-		// 		this.active = null;
-		// 		console.log('active is null')
-		// 	}
-		// }
 		if(this.active!=null) {
 			const size = this.ballsList.length;
 			for(let i = 0; i<size; i++){
@@ -204,7 +135,7 @@ export default class HelloWorldScene extends Phaser.Scene {
 				  	console.log('Balls touched!');
 					this.time.removeEvent(this.activeTimer);
 					this.activeTimer.reset({
-						delay: 2000,                // ms
+						delay: 2000,                
 						callback: ()=>{
 							this.ballsList2.push(this.active);
 							this.activeTimer = null;
