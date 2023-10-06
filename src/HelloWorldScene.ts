@@ -6,14 +6,20 @@ import Phaser from 'phaser'
 export default class HelloWorldScene extends Phaser.Scene {
 	active: any = null;
 	activeTimer: any = null;
-	ballsList = []
-	ballsList2 = []
+	ballsList: any[] = []
+	ballsList2: any[] = []
+	balls: any;
+	balls2: any;
+	ballsTouch: any;
 
 	constructor() {
 		super('hello-world')
 	}
 
 	preload() {
+		this.balls = this.matter.world.nextGroup();
+		this.balls2 = this.matter.world.nextGroup();
+		this.ballsTouch = this.matter.world.nextGroup(true);
 		this.load.image('ball', 'assets/ball.png')
 		this.load.image('ball2', 'assets/ball2.png')
 		// this.load.setBaseURL('https://labs.phaser.io')
@@ -107,12 +113,10 @@ export default class HelloWorldScene extends Phaser.Scene {
 		this.matter.world.setBounds(0, 0, 800, 600, 32, true, true, false, true);
 		this.add.image(400, 300, 'sky')
 
-		const balls = this.matter.world.nextGroup();
-		const balls2 = this.matter.world.nextGroup();
-		const ballsTouch = this.matter.world.nextGroup(true);
 		
-		// this.getBall(100, 100).setCollisionGroup(balls)
-		// this.getBall(105, 105).setCollisionGroup(balls)
+		
+		// this.getBall(100, 100).setCollisionGroup(this.balls)
+		// this.getBall(105, 105).setCollisionGroup(this.balls)
 
 		
 		// const particles = this.add.particles('red')
@@ -123,24 +127,19 @@ export default class HelloWorldScene extends Phaser.Scene {
 			if(this.active!=null) {
 				return;
 			}
-			const ball = this.getBall(pointer.x, pointer.y).setCollisionGroup(balls)
+			const ball = this.getBall(pointer.x, pointer.y).setCollisionGroup(this.balls)
 			ball.setOnCollide((collisionData) => {
-								// Check if the collision involves two balls
-				if (collisionData.bodyA.gameObject instanceof Phaser.GameObjects.Image) {
-					// const newX = (collisionData.bodyB.position.x + collisionData.bodyA.position.x)/2
-					// const newY = (collisionData.bodyB.position.y + collisionData.bodyA.position.y)/2
-					collisionData.bodyB.gameObject.setCollisionGroup(ballsTouch)
-					collisionData.bodyA.gameObject.setCollisionGroup(ballsTouch)
-
-					
-					
+				if (collisionData.bodyA.gameObject instanceof Phaser.GameObjects.Image &&
+					this.ballsList.includes(collisionData.bodyA.gameObject)) {
+					collisionData.bodyB.gameObject.setCollisionGroup(this.ballsTouch)
+					collisionData.bodyA.gameObject.setCollisionGroup(this.ballsTouch)
 				}
 			  });
 			
-			this.ballsList.push(ball)
 			var timer = this.time.addEvent({
-				delay: 3000,                // ms
+				delay: 2000,                // ms
 				callback: ()=>{
+					this.ballsList.push(this.active);
 					this.activeTimer = null;
 					this.active.setName('')
 					this.active=null;
@@ -191,19 +190,40 @@ export default class HelloWorldScene extends Phaser.Scene {
 		// 	}
 		// }
 		if(this.active!=null) {
-			this.ballsList.forEach((b: any) => {
-				if(b === this.active) {
-					return
-				}
+			const size = this.ballsList.length;
+			for(let i = 0; i<size; i++){
+				var b = this.ballsList[i]
 				console.log('x ' + this.active.x + ' y ' + this.active.y)
 				if(Math.abs(b.x-this.active.x)<5 && Math.abs(b.y-this.active.y)<5) {
-					this.getBall2(this.active.x, this.active.y)
+					const ball = this.getBall2(this.active.x, this.active.y).setCollisionCategory(this.balls2).setName('active')
+					this.ballsList2.push(ball)
+					this.ballsList.splice(i,1)
 					b.destroy()
 					this.active.destroy()
+					this.active = ball;
 				  	console.log('Balls touched!');
-					return
+					this.time.removeEvent(this.activeTimer);
+					this.activeTimer.reset({
+						delay: 2000,                // ms
+						callback: ()=>{
+							this.ballsList2.push(this.active);
+							this.activeTimer = null;
+							this.active.setName('')
+							this.active=null;
+							console.log('timer callback')
+						},
+						args: [],
+						loop: false,
+						repeat: 0,
+						startAt: 0,
+						timeScale: 1,
+						paused: false
+					})
+					this.time.addEvent(this.activeTimer)
+
+					break;
 				}
-			})
+			}
 		}
 		if(this.activeTimer!=null) {
 			console.log('timer left = '  + this.activeTimer.getRemaining())

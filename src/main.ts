@@ -18,10 +18,10 @@ const config: Phaser.Types.Core.GameConfig = {
 			// gravity: {
 			// 	y: 0
 			// },
-			debug: {
-				showBody: true,
-				showStaticBody: true
-			}
+			// debug: {
+			// 	showBody: true,
+			// 	showStaticBody: true
+			// }
 		}
 	},
 	scene: [HelloWorldScene],
