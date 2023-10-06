@@ -1,22 +1,21 @@
 import Phaser from 'phaser'
 
-export default class HelloWorldScene extends Phaser.Scene {
-	active: any = null;
-	activeTimer: any = null;
-	ballsList: any[] = []
-	ballsList2: any[] = []
-	balls: any;
-	balls2: any;
-	ballsTouch: any;
+//TODO animated bobas
+export default class BobaFusionScene extends Phaser.Scene {
+	active: Phaser.Physics.Matter.Image | null = null;
+	activeTimer: Phaser.Time.TimerEvent | null = null;
+	ballsList: Phaser.GameObjects.Image[] = []
+	ballsList2: Phaser.GameObjects.Image[] = []
+	bobaCollissionGroup: number = 0;
+	bobaMergeCollissionGroup: number = 0;
 
 	constructor() {
-		super('hello-world')
+		super('BobaFusion')
 	}
 
 	preload() {
-		this.balls = this.matter.world.nextGroup();
-		this.balls2 = this.matter.world.nextGroup();
-		this.ballsTouch = this.matter.world.nextGroup(true);
+		this.bobaCollissionGroup = this.matter.world.nextGroup();
+		this.bobaMergeCollissionGroup = this.matter.world.nextGroup(true);
 		this.load.image('ball', 'assets/ball.png')
 		this.load.image('ball2', 'assets/ball2.png')
 		// this.load.setBaseURL('https://labs.phaser.io')
@@ -27,24 +26,19 @@ export default class HelloWorldScene extends Phaser.Scene {
 		
 	}
 
-	getBall(x: number, y: number) {
+	getBall(x: number, y: number): Phaser.Physics.Matter.Image {
 		// const particles = this.add.particles('red')
 		// const emitter1 = particles.createEmitter({
 		// 	speed: 100,
 		// 	scale: { start: 1, end: 0 },
 		// 	blendMode: 'ADD',
 		// })
-		const logo1 = this.matter.add.image(x, y, 'ball', null, {
-            shape: {
-                type: 'circle',
-                radius: 25
-            },
+		const logo1 = this.matter.add.image(x, y, 'ball').setName('active')
+		logo1.setBounce(0)
+		logo1.setCircle(25, {             
             plugin: {
                 attractors: [ //Only to its group and only when spawning and only when close
-                    function(bodyA, bodyB){
-						if(bodyA) {
-
-						}
+                    function(bodyA: MatterJS.BodyType, bodyB: MatterJS.BodyType) {
 						if(bodyB.gameObject !=null && bodyB.gameObject.name!='active') {
 							return null;
 						}
@@ -52,8 +46,8 @@ export default class HelloWorldScene extends Phaser.Scene {
 							return null;
 						}
 						return {
-							x: (bodyA.position.x - bodyB.position.x) * 0.0001,
-							y: (bodyA.position.y - bodyB.position.y) * 0.0001,
+							x: (bodyA.position.x - bodyB.position.x) * 0.0003,
+							y: (bodyA.position.y - bodyB.position.y) * 0.0003,
 					  	};
 			  
 					  	// apply force to both bodies
@@ -63,7 +57,8 @@ export default class HelloWorldScene extends Phaser.Scene {
 					
                 ]
             }
-        }).setName('active')
+        })
+		logo1.setCollisionGroup(this.bobaCollissionGroup)
 		this.active = logo1
 
 		return logo1;
@@ -72,7 +67,7 @@ export default class HelloWorldScene extends Phaser.Scene {
 	getBall2(x: number, y: number) {
 		const logo1 = this.matter.add.image(x, y, 'ball2').setScale(2)
 		logo1.setCircle(50)
-		logo1.setBounce(0.5)
+		logo1.setBounce(0)
 		
 		return logo1;
 	}
@@ -83,25 +78,24 @@ export default class HelloWorldScene extends Phaser.Scene {
 		this.matter.world.setBounds(0, 0, 800, 600, 32, true, true, false, true);
 		this.add.image(400, 300, 'sky')
 
-		this.input.on('pointerdown', function (pointer)
-        {
+		this.input.on('pointerdown', function (this: BobaFusionScene,pointer: Phaser.Input.Pointer) {
 			if(this.active!=null) {
 				return;
 			}
-			const ball = this.getBall(pointer.x, pointer.y).setCollisionGroup(this.balls)
-			ball.setOnCollide((collisionData) => {//TODO boba bounces away too much, check proximity in update() 
+			const ball: Phaser.Physics.Matter.Image = this.getBall(pointer.x, pointer.y)
+			ball.setOnCollide((collisionData: Phaser.Types.Physics.Matter.MatterCollisionData) => {//TODO boba bounces away too much, check proximity in update() 
 				if (collisionData.bodyA.gameObject instanceof Phaser.GameObjects.Image &&
 					this.ballsList.includes(collisionData.bodyA.gameObject)) {
 					collisionData.bodyB.gameObject.setBounce(0)	
-					collisionData.bodyA.gameObject.setBounce(0)	
-					collisionData.bodyB.gameObject.setCollisionGroup(this.ballsTouch)
-					collisionData.bodyA.gameObject.setCollisionGroup(this.ballsTouch)
+					collisionData.bodyA.gameObject.setBounce(0)
+					collisionData.bodyB.gameObject.setCollisionGroup(this.bobaMergeCollissionGroup)
+					collisionData.bodyA.gameObject.setCollisionGroup(this.bobaMergeCollissionGroup)
 				}
 			  });
 			
 			var timer = this.time.addEvent({
 				delay: 2000,               
-				callback: ()=>{
+				callback: () => {
 					this.ballsList.push(this.active);
 					this.activeTimer = null;
 					this.active.setName('')
@@ -126,7 +120,7 @@ export default class HelloWorldScene extends Phaser.Scene {
 				var b = this.ballsList[i]
 				console.log('x ' + this.active.x + ' y ' + this.active.y)
 				if(Math.abs(b.x-this.active.x)<5 && Math.abs(b.y-this.active.y)<5) {
-					const ball = this.getBall2(this.active.x, this.active.y).setCollisionCategory(this.balls2).setName('active')
+					const ball = this.getBall2(this.active.x, this.active.y).setCollisionCategory(this.bobaCollissionGroup).setName('active')
 					this.ballsList2.push(ball)
 					this.ballsList.splice(i,1)
 					b.destroy()
