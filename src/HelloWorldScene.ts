@@ -68,6 +68,7 @@ export default class BobaFusionScene extends Phaser.Scene {
 		const logo1 = this.matter.add.image(x, y, 'ball2').setScale(2)
 		logo1.setCircle(50)
 		logo1.setBounce(0)
+		logo1.setCollisionCategory(this.bobaCollissionGroup).setName('active')
 		
 		return logo1;
 	}
@@ -84,8 +85,7 @@ export default class BobaFusionScene extends Phaser.Scene {
 			}
 			const ball: Phaser.Physics.Matter.Image = this.getBall(pointer.x, pointer.y)
 			ball.setOnCollide((collisionData: Phaser.Types.Physics.Matter.MatterCollisionData) => {//TODO boba bounces away too much, check proximity in update() 
-				if (collisionData.bodyA.gameObject instanceof Phaser.GameObjects.Image &&
-					this.ballsList.includes(collisionData.bodyA.gameObject)) {
+				if (this.ballsList.includes(collisionData.bodyA.gameObject)) {
 					collisionData.bodyB.gameObject.setBounce(0)	
 					collisionData.bodyA.gameObject.setBounce(0)
 					collisionData.bodyB.gameObject.setCollisionGroup(this.bobaMergeCollissionGroup)
@@ -96,10 +96,12 @@ export default class BobaFusionScene extends Phaser.Scene {
 			var timer = this.time.addEvent({
 				delay: 2000,               
 				callback: () => {
-					this.ballsList.push(this.active);
+					if (this.active!=null) {
+						this.ballsList.push(this.active);
+						this.active.setName('')
+						this.active=null;
+					}
 					this.activeTimer = null;
-					this.active.setName('')
-					this.active=null;
 					console.log('timer callback')
 				},
 				args: [],
@@ -118,33 +120,36 @@ export default class BobaFusionScene extends Phaser.Scene {
 			const size = this.ballsList.length;
 			for(let i = 0; i<size; i++){
 				var b = this.ballsList[i]
-				console.log('x ' + this.active.x + ' y ' + this.active.y)
 				if(Math.abs(b.x-this.active.x)<5 && Math.abs(b.y-this.active.y)<5) {
-					const ball = this.getBall2(this.active.x, this.active.y).setCollisionCategory(this.bobaCollissionGroup).setName('active')
+					const ball = this.getBall2(this.active.x, this.active.y)
 					this.ballsList2.push(ball)
 					this.ballsList.splice(i,1)
 					b.destroy()
 					this.active.destroy()
 					this.active = ball;
 				  	console.log('Balls touched!');
-					this.time.removeEvent(this.activeTimer);
-					this.activeTimer.reset({
-						delay: 2000,                
-						callback: ()=>{
-							this.ballsList2.push(this.active);
-							this.activeTimer = null;
-							this.active.setName('')
-							this.active=null;
-							console.log('timer callback')
-						},
-						args: [],
-						loop: false,
-						repeat: 0,
-						startAt: 0,
-						timeScale: 1,
-						paused: false
-					})
-					this.time.addEvent(this.activeTimer)
+					if (this.activeTimer!=null) {
+						this.time.removeEvent(this.activeTimer);
+						this.activeTimer.reset({
+							delay: 2000,                
+							callback: ()=>{
+								if(this.active!=null) {
+									this.ballsList2.push(this.active);
+									this.active.setName('')
+									this.active=null;
+								}
+								this.activeTimer = null;
+								console.log('timer callback')
+							},
+							args: [],
+							loop: false,
+							repeat: 0,
+							startAt: 0,
+							timeScale: 1,
+							paused: false
+						})
+						this.time.addEvent(this.activeTimer)
+					}
 
 					break;
 				}
