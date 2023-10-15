@@ -5,8 +5,8 @@ import BobaFusionScene from './BobaFusionScene'
 const config: Phaser.Types.Core.GameConfig = {
 	type: Phaser.AUTO,
 	parent: 'app',
-	width: 800,
-	height: 600,
+	width: 350,
+	height: 750,
 	physics: {
 		// default: 'arcade',
 		// arcade: {
