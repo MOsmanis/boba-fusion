@@ -43,10 +43,48 @@ export default class BobaFusionScene extends Phaser.Scene {
 	}
 
 	create() {
-		this.matter.world.setBounds(0, 0, 800, 600, 32, true, true, false, true);
-		this.add.image(400, 300, 'sky')
+		// this.matter.world.setBounds(0, 0, 350, 750, 32, true, true, false, true);
+		this.matter.world.setBounds()
 
-		this.input.on('pointerdown', function (this: BobaFusionScene,pointer: Phaser.Input.Pointer) {
+		var polygon = new Phaser.Geom.Polygon([
+			0, 0,
+			0, 100,
+			100, 100,
+			100, 80
+		]);
+
+		// var bar = '0 0 0 100 100 100 100 0';
+		
+		// var bar = [0,0,0,100,100,100,100,0]
+		
+		
+		// add enclosing side bars
+		// var poly = this.add.polygon(0, 0, bar, 0x00ffff, 0.2);
+		// this.matter.add.gameObject(poly, {
+			// 		shape: { type: 'fromVerts', verts: bar, flagInternal: true },
+			// 		isStatic: true,
+			// 		angle: 0.3
+			// 	}
+			// );
+		var bar = [[0,0],[0,1000],[10,1000],[10,0]]
+		var poly = this.add.polygon(0, 300, bar, 0x00ffff, 0.2);
+		this.matter.add.gameObject(poly, {
+				isStatic: true,
+				angle: -0.2
+			}
+		);
+
+		var poly2 = this.add.polygon(350, 300, bar, 0x00ffff, 0.2);
+		this.matter.add.gameObject(poly2, {
+				isStatic: true,
+				angle: 0.2
+			}
+		);
+
+
+		this.add.image(0, 0, 'sky')
+
+		this.input.on('pointerup', function (this: BobaFusionScene,pointer: Phaser.Input.Pointer) {
 			const ball: Phaser.Physics.Matter.Image = this.spawnBoba(pointer.x, pointer.y, this.level1)
 			this.level1.bobas.push(ball)
         }, this);
